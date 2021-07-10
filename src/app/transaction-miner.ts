@@ -1,5 +1,6 @@
 import Blockchain from "../blockchain";
 import Wallet from "../wallet";
+import Transaction from "../wallet/transaction";
 import TransactionPool from "../wallet/transaction-pool";
 import PubSub from "./pubsub";
 
@@ -15,7 +16,14 @@ class TransactionMiner {
         this.pubsub = pubsub
     }
     mineTransaction() {
+        const validTransactions = this.transactionPool.validTransactions()
 
+        validTransactions.push(
+            Transaction.rewardTransaction({minerWallet: this.wallet})
+        )
+        this.blockchain.addBlock({data: validTransactions})
+        this.pubsub.broadcastChain()
+        this.transactionPool.clear()
     }
 }
 export default TransactionMiner

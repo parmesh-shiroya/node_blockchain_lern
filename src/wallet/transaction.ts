@@ -7,13 +7,13 @@ import {verifySignature} from '../util';
 class Transaction {
     id: string;
     outputMap: {[key: string]: number};
-    input: {timestamp: number, amount: number, address: string, signature: ec.Signature};
-    constructor({senderWallet, recipient, amount, outputMap, input}: {
-        senderWallet: Wallet,
-        recipient: string,
-        amount: number,
+    input: any;
+    constructor({senderWallet = new Wallet(), recipient = "reco[oemt", amount = 0, outputMap, input}: {
+        senderWallet?: Wallet,
+        recipient?: string,
+        amount?: number,
         outputMap?: {[key: string]: number},
-        input?: {timestamp: number, amount: number, address: string, signature: ec.Signature}
+        input?: any
     }) {
         this.id = uuidv1()
         this.outputMap = outputMap || this.createOutputMap({senderWallet, recipient, amount});

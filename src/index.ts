@@ -5,12 +5,17 @@ import PubSub from './app/pubsub';
 import TransactionPool from './wallet/transaction-pool';
 import Wallet from './wallet';
 import Transaction from './wallet/transaction';
+import TransactionMiner from './app/transaction-miner';
 
 const app = express()
 const blockchain: Blockchain = new Blockchain();
 const transactionPool: TransactionPool = new TransactionPool();
 const wallet: Wallet = new Wallet();
 const pubsub: PubSub = new PubSub({blockchain, transactionPool})
+const transactionMiner = new TransactionMiner({
+    blockchain, transactionPool, wallet, pubsub
+})
+
 const DEFAULT_PORT = 5600;
 const ROOT_NODE_ADDRES = `https://localhost:${DEFAULT_PORT}`
 
@@ -35,7 +40,7 @@ app.post('/api/transact', (req: Request, res: Response) => {
         if (transaction) {
             transaction.update({senderWallet: wallet, recipient, amount})
         } else {
-            transaction = wallet.createTransaction({recipient, amount})
+            transaction = wallet.createTransaction({recipient, amount, chain: blockchain.chain})
         }
     } catch (error) {
         return res.status(400).json({type: 'error', message: error.message})
@@ -49,6 +54,20 @@ app.post('/api/transact', (req: Request, res: Response) => {
 
 app.get('api/transaction-pool-map', (req: Request, res: Response) => {
     res.json(transactionPool.transactionMap)
+})
+
+app.get('/api/mine-transactions', (req: Request, res: Response) => {
+    transactionMiner.mineTransaction()
+    res.redirect('/api/blocks')
+
+})
+
+app.get('/api/wallet-info', (req: Request, res: Response) => {
+    const address = wallet.publicKey;
+    res.json({
+        address: address,
+        balance: Wallet.calculateBalance({chain: blockchain.chain, address})
+    })
 })
 
 const syncWithRootState = () => {
